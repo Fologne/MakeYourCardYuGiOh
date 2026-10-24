@@ -1,22 +1,22 @@
 # STATUS DO PROJETO
 
 ## Etapa 1 - Fundacoes de Inteligencia Artificial
-- [ ] Pesquisar, definir e integrar a API de IA para geracao de textos, efeitos e analise de regras.
-- [ ] Pesquisar, definir e integrar a API de IA para geracao de artes das cartas.
-- [ ] Validar a comunicacao com os provedores de IA, pois sao dependencias para os demais fluxos.
-- [ ] Criar o arquivo .gitignore com regras permissivas, garantindo o versionamento da documentacao e configuracao.
+- [X] Pesquisar, definir e integrar a API de IA para geracao de textos, efeitos e analise de regras.
+- [X] Pesquisar, definir e integrar a API de IA para geracao de artes das cartas.
+- [X] Validar a comunicacao com os provedores de IA, pois sao dependencias para os demais fluxos.
+- [X] Criar o arquivo .gitignore com regras permissivas, garantindo o versionamento da documentacao e configuracao.
 
 ## Etapa 2 - Infraestrutura e Banco de Dados
-- [ ] Avaliar e provisionar o banco de dados online.
-- [ ] Configurar o Docker (Dockerfile e compose.yaml) para o ambiente local.
-- [ ] Criar o arquivo .env.example contendo as variaveis de ambiente necessarias.
+- [X] Avaliar e provisionar o banco de dados online.
+- [X] Configurar o Docker (Dockerfile e compose.yaml) para o ambiente local.
+- [X] Criar o arquivo .env.example contendo as variaveis de ambiente necessarias.
 
-## Etapa 3 - Autenticacao e UI Base
-- [ ] Definir e aplicar o padrao global de UI/UX (Fundo preto, tracos dourados e rosa).
-- [ ] Implementar a pagina de criacao de usuario (Registro).
-- [ ] Implementar a pagina de Login.
+## Etapa 3 - Autenticacao e UI Base (Flutter)
+- [ ] Inicializar o projeto Flutter na pasta /frontend.
+- [ ] Definir e aplicar o padrao global de UI/UX (Fundo preto, tracos dourados e rosa) no ThemeData do Flutter.
+- [ ] Implementar a pagina de criacao de usuario e Login no Flutter.
 - [ ] Implementar o bloqueio de rotas para usuarios nao autenticados.
-- [ ] Desenvolver a pagina inicial (Dashboard) exibindo os cards de navegacao para cada funcionalidade.
+- [ ] Desenvolver a pagina inicial (Dashboard) com os cards de navegacao.
 
 ## Etapa 4 - Modulo de Criacao de Cartas Individuais
 - [ ] Desenvolver a interface de selecao do tipo inicial de carta (Monstro, Magia, Armadilha).
