@@ -2,3 +2,9 @@
 !.gitignore
 !README.md
 !STATUS.md
+!src/
+!src/*
+!.env.example
+!compose.yml
+!Dockerfile
+!package.json

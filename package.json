@@ -1,0 +1,11 @@
+{
+  "name": "make-your-card",
+  "version": "1.0.0",
+  "description": "Software de criacao de arquétipos de Yu-Gi-Oh!",
+  "main": "src/validator.js",
+  "type": "module",
+  "dependencies": {
+    "@google/generative-ai": "^0.2.1",
+    "dotenv": "^16.4.5"
+  }
+}

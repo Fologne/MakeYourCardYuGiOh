@@ -4,12 +4,12 @@
 - [ ] Pesquisar, definir e integrar a API de IA para geracao de textos, efeitos e analise de regras.
 - [ ] Pesquisar, definir e integrar a API de IA para geracao de artes das cartas.
 - [ ] Validar a comunicacao com os provedores de IA, pois sao dependencias para os demais fluxos.
+- [ ] Criar o arquivo .gitignore com regras permissivas, garantindo o versionamento da documentacao e configuracao.
 
 ## Etapa 2 - Infraestrutura e Banco de Dados
 - [ ] Avaliar e provisionar o banco de dados online.
 - [ ] Configurar o Docker (Dockerfile e compose.yaml) para o ambiente local.
 - [ ] Criar o arquivo .env.example contendo as variaveis de ambiente necessarias.
-- [ ] Criar o arquivo .gitignore com regras permissivas, garantindo o versionamento da documentacao e configuracao.
 
 ## Etapa 3 - Autenticacao e UI Base
 - [ ] Definir e aplicar o padrao global de UI/UX (Fundo preto, tracos dourados e rosa).
@@ -42,9 +42,15 @@
 - [ ] Implementar engine manual de manipulacao de cartas (Duelingbook style).
 
 ## Alterações de Bugs Ocasionais
+- [Nenhum bug registrado no momento]
 
 ## Alterações de Design
+- [Nenhuma alteração registrada no momento]
 
 ## Alterações de Arquitetura
+- [Nenhuma alteração registrada no momento]
 
 ## Estudos de APIs
+- **IA de Texto:** Adotada a API do Google Gemini (Free Tier) devido a capacidade de contexto e gratuidade.
+- **IA de Imagem:** Adotada a Hugging Face Inference API / Pollinations para geração gratuita de imagens.
+- **Banco de Dados:** Selecionado MongoDB Atlas (Tier M0 - Gratuito) para armazenamento das cartas, arquétipos e usuários.
