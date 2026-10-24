@@ -48,7 +48,9 @@
 - [Nenhuma alteração registrada no momento]
 
 ## Alterações de Arquitetura
-- [Nenhuma alteração registrada no momento]
+- Removido Apache do escopo de consideracoes (nao havera uso de .htaccess).
+- Adotado Flutter para o desenvolvimento do Frontend (visando exportacao para APK e EXE).
+- Definida arquitetura Client-Server: Flutter (Client) se comunicara com o Node.js em Docker (Backend) para garantir a seguranca das chaves de API das IAs.
 
 ## Estudos de APIs
 - **IA de Texto:** Adotada a API do Google Gemini (Free Tier) devido a capacidade de contexto e gratuidade.
