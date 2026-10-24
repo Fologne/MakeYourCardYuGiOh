@@ -1,0 +1,146 @@
+name: Sincronizar GitHub com Google Drive e Gemini Notebook
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: drive-sync-master
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v4
+
+      - name: Enviar snapshot ao Apps Script
+        env:
+          SYNC_URL: ${{ secrets.SYNC_URL }}
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import urllib.request
+          from pathlib import Path
+
+          url = os.environ["SYNC_URL"].strip()
+          token = os.environ["SYNC_TOKEN"]
+          run_id = os.environ["RUN_ID"]
+
+          if not url.startswith("https://script.google.com/"):
+              raise SystemExit("SYNC_URL precisa ser a URL /exec do Apps Script.")
+
+          excluded_dirs = {
+              ".git", "node_modules", ".venv", "venv",
+              "__pycache__", "dist", "build", "coverage"
+          }
+          allowed_ext = {
+              ".txt", ".md", ".markdown", ".py", ".js", ".jsx",
+              ".ts", ".tsx", ".html", ".css", ".scss", ".java",
+              ".c", ".h", ".cpp", ".hpp", ".cs", ".go", ".rs",
+              ".php", ".rb", ".sql", ".json", ".yml", ".yaml",
+              ".toml", ".ini", ".cfg", ".sh", ".ps1", ".xml"
+          }
+          allowed_names = {
+              "dockerfile", ".gitignore", ".dockerignore", ".env.example"
+          }
+          excluded_names = {
+              ".env", "id_rsa", "id_ed25519", "credentials.json",
+              "service-account.json"
+          }
+          excluded_suffixes = {
+              ".pem", ".key", ".p12", ".pfx", ".jks", ".keystore",
+              ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico",
+              ".pdf", ".zip", ".gz", ".7z", ".rar", ".exe", ".dll",
+              ".so", ".class", ".jar", ".mp4", ".mp3", ".wav"
+          }
+
+          def send(payload):
+              body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+              req = urllib.request.Request(
+                  url,
+                  data=body,
+                  headers={"Content-Type": "application/json"},
+                  method="POST"
+              )
+              with urllib.request.urlopen(req, timeout=120) as response:
+                  result = response.read().decode("utf-8", errors="replace")
+              try:
+                  parsed = json.loads(result)
+              except json.JSONDecodeError:
+                  raise RuntimeError("Resposta inesperada do Apps Script: " + result[:500])
+              if not parsed.get("ok"):
+                  raise RuntimeError("Apps Script: " + str(parsed.get("error", result)))
+              return parsed
+
+          paths = subprocess.check_output(
+              ["git", "ls-files", "-z"]
+          ).decode("utf-8").split("\0")
+
+          files = []
+          for raw in paths:
+              if not raw:
+                  continue
+              path = Path(raw)
+              posix = path.as_posix()
+              lower_parts = [part.lower() for part in path.parts]
+              name = path.name.lower()
+              suffix = path.suffix.lower()
+
+              if any(part in excluded_dirs for part in lower_parts):
+                  continue
+              if name in excluded_names:
+                  continue
+              if name.startswith(".env.") and name != ".env.example":
+                  continue
+              if any(part in {"secrets", "secret", "private"} for part in lower_parts):
+                  continue
+              if suffix in excluded_suffixes:
+                  continue
+              if suffix not in allowed_ext and name not in allowed_names:
+                  continue
+
+              try:
+                  content = path.read_text(encoding="utf-8")
+              except (UnicodeError, OSError):
+                  print(f"Ignorado (não é texto UTF-8): {posix}")
+                  continue
+
+              # Evita mandar arquivos individuais excepcionalmente grandes.
+              if len(content) > 120_000:
+                  print(f"Ignorado (arquivo maior que 120 mil caracteres): {posix}")
+                  continue
+
+              files.append({"path": posix, "content": content})
+
+          print(f"Arquivos de texto selecionados: {len(files)}")
+          send({"action": "init", "token": token, "runId": run_id})
+
+          # Cada lote é limitado para reduzir o risco de requisições grandes.
+          batch = []
+          batch_size = 0
+          for item in files:
+              item_size = len(item["content"]) + len(item["path"]) + 100
+              if batch and (len(batch) >= 15 or batch_size + item_size > 80_000):
+                  send({"action": "batch", "token": token, "files": batch})
+                  batch = []
+                  batch_size = 0
+              batch.append(item)
+              batch_size += item_size
+
+          if batch:
+              send({"action": "batch", "token": token, "files": batch})
+
+          result = send({"action": "finish", "token": token})
+          print("Sincronização concluída:", result)
+          PY
