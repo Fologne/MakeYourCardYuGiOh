@@ -12,8 +12,8 @@
 - [X] Criar o arquivo .env.example contendo as variaveis de ambiente necessarias.
 
 ## Etapa 3 - Autenticacao e UI Base (Flutter)
-- [ ] Inicializar o projeto Flutter na pasta /frontend.
-- [ ] Definir e aplicar o padrao global de UI/UX (Fundo preto, tracos dourados e rosa) no ThemeData do Flutter.
+- [X] Inicializar o projeto Flutter na pasta /frontend.
+- [X] Definir e aplicar o padrao global de UI/UX (Fundo preto, tracos dourados e rosa) no ThemeData do Flutter.
 - [ ] Implementar a pagina de criacao de usuario e Login no Flutter.
 - [ ] Implementar o bloqueio de rotas para usuarios nao autenticados.
 - [ ] Desenvolver a pagina inicial (Dashboard) com os cards de navegacao.

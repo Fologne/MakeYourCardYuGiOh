@@ -8,3 +8,5 @@
 !compose.yml
 !Dockerfile
 !package.json
+!frontend/
+!frontend/**
