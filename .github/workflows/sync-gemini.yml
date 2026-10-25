@@ -49,7 +49,7 @@ jobs:
               ".ts", ".tsx", ".html", ".css", ".scss", ".java",
               ".c", ".h", ".cpp", ".hpp", ".cs", ".go", ".rs",
               ".php", ".rb", ".sql", ".json", ".yml", ".yaml",
-              ".toml", ".ini", ".cfg", ".sh", ".ps1", ".xml"
+              ".toml", ".ini", ".cfg", ".sh", ".ps1", ".xml", ".dart"
           }
           allowed_names = {
               "dockerfile", ".gitignore", ".dockerignore", ".env.example"
