@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/dashboard_screen.dart';
 
 void main() {
   runApp(const MakeYourCardApp());
@@ -14,8 +17,8 @@ class MakeYourCardApp extends StatelessWidget {
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.black,
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFFFD700), // Dourado
-          secondary: Color(0xFFFF1493), // Rosa
+          primary: Color(0xFFFFD700),
+          secondary: Color(0xFFFF1493),
           surface: Colors.black,
         ),
         appBarTheme: const AppBarTheme(
@@ -29,36 +32,12 @@ class MakeYourCardApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      // Define a rota inicial
       initialRoute: '/login',
       routes: {
-        '/login': (context) => const PlaceholderScreen(title: 'Login'),
-        '/register': (context) => const PlaceholderScreen(title: 'Registro'),
-        '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+        '/dashboard': (context) => const DashboardScreen(),
       },
-    );
-  }
-}
-
-// Tela temporaria para validar a navegacao e o tema
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const PlaceholderScreen({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text(
-          'Construcao da tela: $title',
-          style: const TextStyle(
-            color: Color(0xFFFF1493), 
-            fontSize: 24, 
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
     );
   }
 }
