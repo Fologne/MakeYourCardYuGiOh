@@ -17,19 +17,27 @@
 - [ ] Implementar a pagina de criacao de usuario e Login no Flutter.
 - [ ] Implementar o bloqueio de rotas para usuarios nao autenticados.
 - [ ] Desenvolver a pagina inicial (Dashboard) com os cards de navegacao.
+- [ ] Implementar a aba de configuracoes (acessada por um icone de engrenagem no canto) para gerenciar dados da conta e preferencias.
 
-## Etapa 4 - Modulo de Criacao de Cartas Individuais
+## Etapa 4 - Backend: Modelagem de Usuário e Autenticação
+- [ ] Criar o modelo de dados de Usuário (Mongoose) contendo: nome, sobrenome, nome de usuário, email, idade, sexo, origem no jogo (TCG, OCG, Master Duel, Duel Links), senha criptografada, ID da conta e plano da conta.
+- [ ] Implementar a lógica de geração automática e única do ID da conta para novos registros.
+- [ ] Desenvolver a rota de criação de conta (Registro) com validação dos campos obrigatórios e hash de senha (ex: bcrypt).
+- [ ] Desenvolver a rota de Login com geração de token de acesso (JWT) para proteger rotas futuras.
+- [ ] Sincronizar o formulário de registro do Flutter (Frontend) com a nova rota de criação de conta do backend.
+
+## Etapa 5 - Modulo de Criacao de Cartas Individuais
 - [ ] Desenvolver a interface de selecao do tipo inicial de carta (Monstro, Magia, Armadilha).
 - [ ] Desenvolver os formularios de atributos, textos e estatisticas.
 - [ ] Implementar a logica de salvar a carta no banco de dados online.
 - [ ] Configurar o redirecionamento automatico para a pagina de visualizacao apos salvar.
 
-## Etapa 5 - Gerenciamento e Deckbuilder
+## Etapa 6 - Gerenciamento e Deckbuilder
 - [ ] Implementar a galeria geral de cartas, exibindo cartas individuais e de arquétipos.
 - [ ] Implementar a funcionalidade de criar e gerenciar baralhos.
 - [ ] Integrar a base de dados de cartas originais do jogo para uso misto com as cartas criadas.
 
-## Etapa 6 - Modulo de Arquétipos assistido por IA
+## Etapa 7 - Modulo de Arquétipos assistido por IA
 - [ ] Desenvolver a interface de chat com a IA para construcao de arquétipos.
 - [ ] Implementar as restricoes de regras no prompt da IA (ex: delimitacao de custo ate o ponto e virgula).
 - [ ] Adicionar fluxo de aprovacao ou rejeicao de efeitos gerados.
@@ -37,9 +45,26 @@
 - [ ] Implementar validador de coerencia do arquétipo.
 - [ ] Configurar as mensagens de erro de coerencia (apontar as 1 ou mais cartas conflitantes, ou apontar erro geral no arquétipo caso a incompatibilidade ultrapasse 60%).
 
-## Etapa 7 - Simulador de Duelos
+## Etapa 8 - Simulador de Duelos
 - [ ] Estruturar o tabuleiro / field virtual.
 - [ ] Implementar engine manual de manipulacao de cartas (Duelingbook style).
+
+## Etapa 9 - Configuracoes
+- [ ] Desenvolver interface e integracao para alterar dados da conta.
+- [ ] Implementar funcionalidade para desativar a conta temporariamente.
+- [ ] Implementar funcionalidade para apagar a conta definitivamente.
+- [ ] Adicionar opcao para alterar a forma de tratamento do usuario.
+- [ ] Estruturar a aba de configuracoes para permitir a adicao de novas opcoes ao decorrer do projeto.
+
+## Etapa de Testes (Multiplataforma, Banco de Dados e APIs)
+> Testes a serem realizados: Verificacao de build e funcionamento em APK, EXE e Web; Validacao da integridade dos dados no MongoDB; Validacao de estabilidade das chamadas para as APIs de IA (Gemini e Hugging Face).
+
+- [ ] Testes da Etapa 4 (Modulo de Criacao de Cartas Individuais)
+- [ ] Testes da Etapa 5 (Gerenciamento e Deckbuilder)
+- [ ] Testes da Etapa 6 (Modulo de Arquétipos assistido por IA)
+- [ ] Testes da Etapa 7 (Simulador de Duelos)
+- [ ] Testes da Etapa 8 (Backend: Modelagem de Usuario e Autenticacao)
+- [ ] Testes da Etapa 9 (Configuracoes)
 
 ## Alterações de Bugs Ocasionais
 - [Nenhum bug registrado no momento]
