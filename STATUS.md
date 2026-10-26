@@ -58,12 +58,11 @@
 
 ## Etapa de Testes (Multiplataforma, Banco de Dados e APIs)
 > Testes a serem realizados: Verificacao de build e funcionamento em APK, EXE e Web; Validacao da integridade dos dados no MongoDB; Validacao de estabilidade das chamadas para as APIs de IA (Gemini e Hugging Face).
-
-- [ ] Testes da Etapa 4 (Modulo de Criacao de Cartas Individuais)
-- [ ] Testes da Etapa 5 (Gerenciamento e Deckbuilder)
-- [ ] Testes da Etapa 6 (Modulo de Arquétipos assistido por IA)
-- [ ] Testes da Etapa 7 (Simulador de Duelos)
-- [ ] Testes da Etapa 8 (Backend: Modelagem de Usuario e Autenticacao)
+- [ ] Testes da Etapa 4 (Backend: Modelagem de Usuario e Autenticacao)
+- [ ] Testes da Etapa 5 (Modulo de Criacao de Cartas Individuais)
+- [ ] Testes da Etapa 6 (Gerenciamento e Deckbuilder)
+- [ ] Testes da Etapa 7 (Modulo de Arquétipos assistido por IA)
+- [ ] Testes da Etapa 8 (Simulador de DuelosBackend: Modelagem de Usuario e Autenticacao)
 - [ ] Testes da Etapa 9 (Configuracoes)
 
 ## Alterações de Bugs Ocasionais
