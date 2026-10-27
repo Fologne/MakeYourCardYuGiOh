@@ -14,13 +14,13 @@
 ## Etapa 3 - Autenticacao e UI Base (Flutter)
 - [X] Inicializar o projeto Flutter na pasta /frontend.
 - [X] Definir e aplicar o padrao global de UI/UX (Fundo preto, tracos dourados e rosa) no ThemeData do Flutter.
-- [ ] Implementar a pagina de criacao de usuario e Login no Flutter.
-- [ ] Implementar o bloqueio de rotas para usuarios nao autenticados.
-- [ ] Desenvolver a pagina inicial (Dashboard) com os cards de navegacao.
-- [ ] Implementar a aba de configuracoes (acessada por um icone de engrenagem no canto) para gerenciar dados da conta e preferencias.
+- [X] Implementar a pagina de criacao de usuario e Login no Flutter.
+- [X] Implementar o bloqueio de rotas para usuarios nao autenticados.
+- [X] Desenvolver a pagina inicial (Dashboard) com os cards de navegacao.
+- [X] Implementar a aba de configuracoes (acessada por um icone de engrenagem no canto) para gerenciar dados da conta e preferencias.
 
 ## Etapa 4 - Backend: Modelagem de Usuário e Autenticação
-- [ ] Criar o modelo de dados de Usuário (Mongoose) contendo: nome, sobrenome, nome de usuário, email, idade, sexo, origem no jogo (TCG, OCG, Master Duel, Duel Links), senha criptografada, ID da conta e plano da conta.
+- [ ] Criar o modelo de dados de Usuário (Mongoose) contendo: nome, sobrenome, nome de usuário, email, idade, data de nascimento, sexo, origem no jogo (TCG, OCG, Master Duel, Duel Links), senha criptografada, ID da conta e plano da conta.
 - [ ] Implementar a lógica de geração automática e única do ID da conta para novos registros.
 - [ ] Desenvolver a rota de criação de conta (Registro) com validação dos campos obrigatórios e hash de senha (ex: bcrypt).
 - [ ] Desenvolver a rota de Login com geração de token de acesso (JWT) para proteger rotas futuras.
