@@ -20,11 +20,11 @@
 - [X] Implementar a aba de configuracoes (acessada por um icone de engrenagem no canto) para gerenciar dados da conta e preferencias.
 
 ## Etapa 4 - Backend: Modelagem de Usuário e Autenticação
-- [ ] Criar o modelo de dados de Usuário (Mongoose) contendo: nome, sobrenome, nome de usuário, email, idade, data de nascimento, sexo, origem no jogo (TCG, OCG, Master Duel, Duel Links), senha criptografada, ID da conta e plano da conta.
-- [ ] Implementar a lógica de geração automática e única do ID da conta para novos registros.
-- [ ] Desenvolver a rota de criação de conta (Registro) com validação dos campos obrigatórios e hash de senha (ex: bcrypt).
-- [ ] Desenvolver a rota de Login com geração de token de acesso (JWT) para proteger rotas futuras.
-- [ ] Sincronizar o formulário de registro do Flutter (Frontend) com a nova rota de criação de conta do backend.
+- [X] Criar o modelo de dados de Usuário (Mongoose) contendo: nome, sobrenome, nome de usuário, email, idade,j data de nascimento, sexo, origem no jogo (TCG, OCG, Master Duel, Duel Links), senha criptografada, ID da conta e plano da conta.
+- [X] Implementar a lógica de geração automática e única do ID da conta para novos registros.
+- [X] Desenvolver a rota de criação de conta (Registro) com validação dos campos obrigatórios e hash de senha (ex: bcrypt).
+- [X] Desenvolver a rota de Login com geração de token de acesso (JWT) para proteger rotas futuras.
+- [X] Sincronizar o formulário de registro do Flutter (Frontend) com a nova rota de criação de conta do backend.
 
 ## Etapa 5 - Modulo de Criacao de Cartas Individuais
 - [ ] Desenvolver a interface de selecao do tipo inicial de carta (Monstro, Magia, Armadilha).

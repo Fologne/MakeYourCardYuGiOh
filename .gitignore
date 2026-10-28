@@ -3,7 +3,7 @@
 !README.md
 !STATUS.md
 !src/
-!src/*
+!src/**
 !.env.example
 !compose.yml
 !Dockerfile

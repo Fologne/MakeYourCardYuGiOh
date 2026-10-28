@@ -2,9 +2,11 @@ services:
   app:
     build: .
     container_name: make-your-card-app
+    ports:
+      - "3000:3000"
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     env_file:
       - .env
-    command: node src/database.js
+    command: sh -c "npm install && npm start"

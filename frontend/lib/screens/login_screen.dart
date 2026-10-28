@@ -55,10 +55,12 @@ class _LoginScreenState extends State<LoginScreen>
     if (success) {
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
+      final errorMsg = _authService.errorMessage ?? 'Credenciais invalidas. Verifique seus dados.';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Credenciais invalidas. Verifique seus dados.'),
-          backgroundColor: Color(0xFFFF1493),
+        SnackBar(
+          content: Text(errorMsg),
+          backgroundColor: const Color(0xFFFF1493),
+          duration: const Duration(seconds: 4),
         ),
       );
     }

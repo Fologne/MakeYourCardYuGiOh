@@ -12,12 +12,14 @@ async function validarConexaoBanco() {
     }
 
     // Configura o mongoose e conecta ao banco
-    await mongoose.connect(process.env.DB_URI);
+    await mongoose.connect(process.env.DB_URI, {
+      dbName: 'makeyourcard',
+      authSource: 'admin',
+    });
     
     console.log('Conexao com o MongoDB Atlas estabelecida com sucesso.');
-    console.log('Etapa 2 concluida com exito. Infraestrutura de banco de dados pronta.');
+    console.log('Infraestrutura de banco de dados pronta.');
     
-    // Encerra a conexao após o teste
     await mongoose.connection.close();
     process.exit(0);
 

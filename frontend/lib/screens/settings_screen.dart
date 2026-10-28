@@ -81,6 +81,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
+  IconData _getGenderIcon(String gender) {
+    switch (gender) {
+      case 'Masculino':
+        return Icons.male;
+      case 'Feminino':
+        return Icons.female;
+      case 'Outro':
+        return Icons.transgender;
+      default:
+        return Icons.shield_outlined;
+    }
+  }
+
+  IconData _getGameOriginIcon(String origin) {
+    switch (origin) {
+      case 'TCG':
+        return Icons.style;
+      case 'OCG':
+        return Icons.auto_stories;
+      case 'Master Duel':
+        return Icons.desktop_windows;
+      case 'Duel Links':
+        return Icons.phone_android;
+      default:
+        return Icons.sports_esports;
+    }
+  }
+
+  IconData _getPronounIcon(String pronoun) {
+    switch (pronoun) {
+      case 'Mestre':
+        return Icons.military_tech;
+      case 'Jogador':
+        return Icons.sports_esports;
+      case 'Invocador':
+        return Icons.auto_awesome;
+      default:
+        return Icons.shield;
+    }
+  }
+
   int get _calculatedAge {
     final now = DateTime.now();
     int age = now.year - _selectedBirthDate.year;
@@ -397,11 +438,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               flex: 4,
                               child: DropdownButtonFormField<String>(
                                 initialValue: _selectedGender,
-                                dropdownColor: const Color(0xFF1F1F1F),
+                                dropdownColor: const Color(0xFF141414),
+                                borderRadius: BorderRadius.circular(12),
+                                elevation: 16,
+                                icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFFFD700)),
                                 style: const TextStyle(color: Colors.white),
                                 decoration: _buildFieldDecoration('Sexo', Icons.person_outline),
+                                selectedItemBuilder: (context) {
+                                  return _genderOptions.map((g) {
+                                    return Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        g,
+                                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                                      ),
+                                    );
+                                  }).toList();
+                                },
                                 items: _genderOptions.map((g) {
-                                  return DropdownMenuItem(value: g, child: Text(g));
+                                  final isSelected = g == _selectedGender;
+                                  return DropdownMenuItem(
+                                    value: g,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                                      decoration: const BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(color: Color(0x22FFD700), width: 1),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            _getGenderIcon(g),
+                                            size: 18,
+                                            color: isSelected ? const Color(0xFFFF1493) : const Color(0xFFFFD700),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              g,
+                                              style: TextStyle(
+                                                color: isSelected ? const Color(0xFFFFD700) : Colors.white,
+                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                          if (isSelected)
+                                            const Icon(Icons.check, size: 16, color: Color(0xFFFF1493)),
+                                        ],
+                                      ),
+                                    ),
+                                  );
                                 }).toList(),
                                 onChanged: (v) {
                                   if (v != null) setState(() => _selectedGender = v);
@@ -413,11 +501,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
                           initialValue: _selectedGameOrigin,
-                          dropdownColor: const Color(0xFF1F1F1F),
+                          dropdownColor: const Color(0xFF141414),
+                          borderRadius: BorderRadius.circular(12),
+                          elevation: 16,
+                          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFFFD700)),
                           style: const TextStyle(color: Colors.white),
                           decoration: _buildFieldDecoration('Origem no Jogo', Icons.sports_esports),
+                          selectedItemBuilder: (context) {
+                            return _gameOriginOptions.map((orig) {
+                              return Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  orig,
+                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                ),
+                              );
+                            }).toList();
+                          },
                           items: _gameOriginOptions.map((orig) {
-                            return DropdownMenuItem(value: orig, child: Text(orig));
+                            final isSelected = orig == _selectedGameOrigin;
+                            return DropdownMenuItem(
+                              value: orig,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                                decoration: const BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(color: Color(0x22FFD700), width: 1),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      _getGameOriginIcon(orig),
+                                      size: 18,
+                                      color: isSelected ? const Color(0xFFFF1493) : const Color(0xFFFFD700),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        orig,
+                                        style: TextStyle(
+                                          color: isSelected ? const Color(0xFFFFD700) : Colors.white,
+                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(Icons.check, size: 16, color: Color(0xFFFF1493)),
+                                  ],
+                                ),
+                              ),
+                            );
                           }).toList(),
                           onChanged: (v) {
                             if (v != null) setState(() => _selectedGameOrigin = v);
@@ -448,11 +583,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
                           initialValue: _selectedPronoun,
-                          dropdownColor: const Color(0xFF1F1F1F),
+                          dropdownColor: const Color(0xFF141414),
+                          borderRadius: BorderRadius.circular(12),
+                          elevation: 16,
+                          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFFFD700)),
                           style: const TextStyle(color: Colors.white),
                           decoration: _buildFieldDecoration('Tratamento', Icons.label),
+                          selectedItemBuilder: (context) {
+                            return _pronounOptions.map((p) {
+                              return Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  p,
+                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                ),
+                              );
+                            }).toList();
+                          },
                           items: _pronounOptions.map((p) {
-                            return DropdownMenuItem(value: p, child: Text(p));
+                            final isSelected = p == _selectedPronoun;
+                            return DropdownMenuItem(
+                              value: p,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                                decoration: const BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(color: Color(0x22FFD700), width: 1),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      _getPronounIcon(p),
+                                      size: 18,
+                                      color: isSelected ? const Color(0xFFFF1493) : const Color(0xFFFFD700),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        p,
+                                        style: TextStyle(
+                                          color: isSelected ? const Color(0xFFFFD700) : Colors.white,
+                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(Icons.check, size: 16, color: Color(0xFFFF1493)),
+                                  ],
+                                ),
+                              ),
+                            );
                           }).toList(),
                           onChanged: (v) {
                             if (v != null) setState(() => _selectedPronoun = v);

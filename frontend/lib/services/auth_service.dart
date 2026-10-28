@@ -1,62 +1,71 @@
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
+import 'api_service.dart';
 
-// Servico responsavel pelo gerenciamento de sessao e autenticacao
+// Servico responsavel pelo gerenciamento de sessao e integracao com a API
 class AuthService extends ChangeNotifier {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
 
+  final ApiService _api = ApiService();
+
   UserModel? _currentUser;
+  String? _token;
   bool _isLoading = false;
+  String? _errorMessage;
 
   UserModel? get currentUser => _currentUser;
+  String? get token => _token;
   bool get isAuthenticated => _currentUser != null;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
-  // Gera identificador unico de conta para novos usuarios
-  String _generateAccountId() {
-    final random = Random();
-    final numbers = random.nextInt(900000) + 100000;
-    return 'MYC-$numbers';
-  }
-
-  // Realiza o login do usuario
+  // Realiza o login conectando-se a API do backend e validando no MongoDB
   Future<bool> login(String identifier, String password) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
-    // Simulacao de requisicao de autenticacao
-    await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      final response = await _api.post('/auth/login', {
+        'identifier': identifier.trim(),
+        'password': password,
+      });
 
-    if (identifier.trim().isEmpty || password.isEmpty) {
+      if (response['success'] == true && response['user'] != null) {
+        _token = response['token'];
+        _currentUser = UserModel.fromMap(response['user']);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _errorMessage = response['message'] ?? 'Credenciais invalidas.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Erro na comunicacao com a API de login: $e');
+      }
+
+      final errorStr = e.toString().replaceFirst('Exception: ', '');
+      if (errorStr.contains('Connection refused') ||
+          errorStr.contains('Failed to connect') ||
+          errorStr.contains('ClientException')) {
+        _errorMessage = 'Nao foi possivel conectar ao servidor (porta 3000). Verifique se o Docker/Backend esta ativo.';
+      } else {
+        _errorMessage = errorStr;
+      }
+
       _isLoading = false;
       notifyListeners();
       return false;
     }
-
-    // Cria sessao de usuario autenticado
-    _currentUser = UserModel(
-      id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-      accountId: _generateAccountId(),
-      username: identifier.contains('@') ? identifier.split('@').first : identifier,
-      email: identifier.contains('@') ? identifier : '$identifier@makeyourcard.com',
-      firstName: 'Duelista',
-      lastName: 'Principal',
-      birthDate: DateTime(2000, 1, 1),
-      gender: 'Nao informado',
-      gameOrigin: 'TCG',
-      plan: 'Gratuito',
-      preferredPronoun: 'Duelista',
-    );
-
-    _isLoading = false;
-    notifyListeners();
-    return true;
   }
 
-  // Registra um novo usuario utilizando data de nascimento
+  // Registra um novo usuario sincronizando com a rota POST /api/auth/register no MongoDB
   Future<bool> register({
     required String firstName,
     required String lastName,
@@ -68,51 +77,103 @@ class AuthService extends ChangeNotifier {
     required String password,
   }) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
-    // Simulacao de envio para a API do backend
-    await Future.delayed(const Duration(milliseconds: 700));
+    try {
+      final payload = {
+        'firstName': firstName.trim(),
+        'lastName': lastName.trim(),
+        'username': username.trim(),
+        'email': email.trim(),
+        'birthDate': birthDate.toIso8601String(),
+        'gender': gender,
+        'gameOrigin': gameOrigin,
+        'password': password,
+      };
 
-    _currentUser = UserModel(
-      id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-      accountId: _generateAccountId(),
-      username: username.trim(),
-      email: email.trim(),
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      birthDate: birthDate,
-      gender: gender,
-      gameOrigin: gameOrigin,
-      plan: 'Gratuito',
-      preferredPronoun: 'Duelista',
-    );
+      final response = await _api.post('/auth/register', payload);
 
-    _isLoading = false;
-    notifyListeners();
-    return true;
+      if (response['success'] == true && response['user'] != null) {
+        _token = response['token'];
+        _currentUser = UserModel.fromMap(response['user']);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _errorMessage = response['message'] ?? 'Falha ao registrar usuario.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Erro na comunicacao com a API de registro: $e');
+      }
+
+      final errorStr = e.toString().replaceFirst('Exception: ', '');
+      if (errorStr.contains('Connection refused') ||
+          errorStr.contains('Failed to connect') ||
+          errorStr.contains('ClientException')) {
+        _errorMessage = 'Nao foi possivel conectar ao servidor (porta 3000). Inicie o Docker/Backend para salvar no MongoDB.';
+      } else {
+        _errorMessage = errorStr;
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 
-  // Atualiza os dados cadastrais do usuario
-  void updateUserData(UserModel updatedUser) {
+  // Atualiza os dados cadastrais do usuario no backend
+  Future<bool> updateUserData(UserModel updatedUser) async {
     _currentUser = updatedUser;
     notifyListeners();
+
+    if (_token != null) {
+      try {
+        await _api.put('/auth/profile', updatedUser.toMap(), token: _token!);
+        return true;
+      } catch (e) {
+        if (kDebugMode) print('Erro ao sincronizar atualizacao no backend: $e');
+      }
+    }
+    return true;
   }
 
   // Encerra a sessao
   void logout() {
     _currentUser = null;
+    _token = null;
     notifyListeners();
   }
 
-  // Desativa temporariamente a conta
-  void deactivateAccount() {
+  // Desativa temporariamente a conta no backend
+  Future<void> deactivateAccount() async {
+    if (_token != null) {
+      try {
+        await _api.post('/auth/deactivate', {}, token: _token);
+      } catch (e) {
+        if (kDebugMode) print('Erro ao desativar conta no backend: $e');
+      }
+    }
     _currentUser = null;
+    _token = null;
     notifyListeners();
   }
 
-  // Remove definitivamente a conta
-  void deleteAccount() {
+  // Remove definitivamente a conta no backend
+  Future<void> deleteAccount() async {
+    if (_token != null) {
+      try {
+        await _api.delete('/auth/account', token: _token!);
+      } catch (e) {
+        if (kDebugMode) print('Erro ao apagar conta no backend: $e');
+      }
+    }
     _currentUser = null;
+    _token = null;
     notifyListeners();
   }
 }
