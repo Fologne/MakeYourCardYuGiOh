@@ -1,0 +1,15 @@
+.git
+.gitignore
+.github
+node_modules
+frontend
+.env
+.env.*
+!.env.example
+*.log
+npm-debug.log*
+coverage
+dist
+build
+.DS_Store
+AGENT.md

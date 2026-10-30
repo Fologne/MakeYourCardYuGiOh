@@ -8,7 +8,9 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test:db": "node src/database.js",
-    "test:ai": "node src/validator.js"
+    "test:ai": "node src/validator.js",
+    "test": "node --test test/*.test.js",
+    "test:integration": "node test/auth.integration.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.2.1",

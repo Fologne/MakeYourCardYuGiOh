@@ -1,3 +1,4 @@
+import { calculateAge } from '../utils/validation.js';
 import mongoose from 'mongoose';
 
 // Schema do modelo de Usuario conforme especificacoes da Etapa 4
@@ -71,33 +72,24 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    sessionVersion: { type: Number, default: 0, select: false },
   },
   {
     timestamps: true,
   }
 );
 
-// Calcula a idade com precisao antes de salvar caso a data de nascimento seja informada
-userSchema.pre('save', function (next) {
-  if (this.birthDate) {
-    const today = new Date();
-    const birth = new Date(this.birthDate);
-    let calculatedAge = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      calculatedAge--;
-    }
-
-    this.age = calculatedAge >= 0 ? calculatedAge : 0;
-  }
-  next();
+// Atualiza idade antes da validacao do documento.
+userSchema.pre('validate', function () {
+  if (this.birthDate) this.age = calculateAge(this.birthDate);
 });
 
 // Metodo para retornar o objeto do usuario seguro (sem a senha)
 userSchema.methods.toSafeObject = function () {
-  const obj = this.toObject();
+  const obj = this.toObject({ virtuals: true });
+  if (this.birthDate) obj.age = calculateAge(this.birthDate);
   delete obj.password;
+  delete obj.sessionVersion;
   return obj;
 };
 

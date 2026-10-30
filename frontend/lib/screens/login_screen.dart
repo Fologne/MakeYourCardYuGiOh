@@ -1,6 +1,9 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
+
 import 'dart:math' as math;
+
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -55,7 +58,9 @@ class _LoginScreenState extends State<LoginScreen>
     if (success) {
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
-      final errorMsg = _authService.errorMessage ?? 'Credenciais invalidas. Verifique seus dados.';
+      final errorMsg =
+          _authService.errorMessage ??
+          'Credenciais invalidas. Verifique seus dados.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMsg),
@@ -93,9 +98,7 @@ class _LoginScreenState extends State<LoginScreen>
           // Efeito de vidro sobre as cartas
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.6),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.6)),
           ),
 
           // Formulario de login
@@ -108,7 +111,10 @@ class _LoginScreenState extends State<LoginScreen>
                   padding: const EdgeInsets.all(28.0),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A1A1A).withValues(alpha: 0.88),
-                    border: Border.all(color: const Color(0xFFFFD700), width: 1.5),
+                    border: Border.all(
+                      color: const Color(0xFFFFD700),
+                      width: 1.5,
+                    ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
@@ -136,10 +142,7 @@ class _LoginScreenState extends State<LoginScreen>
                         const SizedBox(height: 8),
                         const Text(
                           'Acesse sua conta para duelar e criar',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 13,
-                          ),
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
                         ),
                         const SizedBox(height: 32),
 
@@ -160,15 +163,24 @@ class _LoginScreenState extends State<LoginScreen>
                               borderSide: BorderSide(color: Color(0xFFFFD700)),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFFFF1493), width: 2),
+                              borderSide: BorderSide(
+                                color: Color(0xFFFF1493),
+                                width: 2,
+                              ),
                             ),
                             errorBorder: OutlineInputBorder(
                               borderSide: BorderSide(color: Colors.redAccent),
                             ),
                             focusedErrorBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent,
+                                width: 2,
+                              ),
                             ),
-                            prefixIcon: Icon(Icons.person, color: Color(0xFFFFD700)),
+                            prefixIcon: Icon(
+                              Icons.person,
+                              color: Color(0xFFFFD700),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -189,23 +201,36 @@ class _LoginScreenState extends State<LoginScreen>
                           },
                           decoration: InputDecoration(
                             labelText: 'Senha',
-                            labelStyle: const TextStyle(color: Color(0xFFFF1493)),
+                            labelStyle: const TextStyle(
+                              color: Color(0xFFFF1493),
+                            ),
                             enabledBorder: const OutlineInputBorder(
                               borderSide: BorderSide(color: Color(0xFFFFD700)),
                             ),
                             focusedBorder: const OutlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFFFF1493), width: 2),
+                              borderSide: BorderSide(
+                                color: Color(0xFFFF1493),
+                                width: 2,
+                              ),
                             ),
                             errorBorder: const OutlineInputBorder(
                               borderSide: BorderSide(color: Colors.redAccent),
                             ),
                             focusedErrorBorder: const OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent,
+                                width: 2,
+                              ),
                             ),
-                            prefixIcon: const Icon(Icons.lock, color: Color(0xFFFFD700)),
+                            prefixIcon: const Icon(
+                              Icons.lock,
+                              color: Color(0xFFFFD700),
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                                 color: const Color(0xFFFFD700),
                               ),
                               onPressed: () {
@@ -237,7 +262,9 @@ class _LoginScreenState extends State<LoginScreen>
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.black,
+                                      ),
                                     ),
                                   )
                                 : const Text(
@@ -254,7 +281,8 @@ class _LoginScreenState extends State<LoginScreen>
 
                         // Link para Registro
                         TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/register'),
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/register'),
                           child: const Text(
                             'Nao possui conta? Registre-se',
                             style: TextStyle(

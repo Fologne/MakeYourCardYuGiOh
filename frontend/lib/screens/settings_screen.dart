@@ -1,4 +1,7 @@
+import '../widgets/responsive_form_row.dart';
+
 import 'package:flutter/material.dart';
+
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
 
@@ -12,6 +15,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
 
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
@@ -126,7 +130,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final now = DateTime.now();
     int age = now.year - _selectedBirthDate.year;
     if (now.month < _selectedBirthDate.month ||
-        (now.month == _selectedBirthDate.month && now.day < _selectedBirthDate.day)) {
+        (now.month == _selectedBirthDate.month &&
+            now.day < _selectedBirthDate.day)) {
       age--;
     }
     return age >= 0 ? age : 0;
@@ -158,7 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
     );
 
-    if (picked != null) {
+    if (picked != null && mounted) {
       setState(() {
         _selectedBirthDate = picked;
         final day = picked.day.toString().padLeft(2, '0');
@@ -169,11 +174,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _saveProfile() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _saveProfile() async {
+    if (_isSaving || !_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
 
     final currentUser = _authService.currentUser;
-    if (currentUser == null) return;
+    if (currentUser == null) {
+      setState(() => _isSaving = false);
+      return;
+    }
 
     final UserModel updated = currentUser.copyWith(
       firstName: _firstNameController.text.trim(),
@@ -185,12 +194,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       preferredPronoun: _selectedPronoun,
     );
 
-    _authService.updateUserData(updated);
+    final success = await _authService.updateUserData(updated);
 
+    if (!mounted) return;
+
+    setState(() => _isSaving = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Dados atualizados com sucesso.'),
-        backgroundColor: Color(0xFFFFD700),
+      SnackBar(
+        content: Text(
+          success
+              ? 'Dados atualizados com sucesso.'
+              : (_authService.errorMessage ?? 'Falha ao atualizar os dados.'),
+        ),
+        backgroundColor: success
+            ? const Color(0xFFFFD700)
+            : const Color(0xFFFF1493),
       ),
     );
   }
@@ -206,7 +224,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         title: const Text(
           'Desativar Conta',
-          style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Color(0xFFFFD700),
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: const Text(
           'Sua conta sera desativada temporariamente e sua sessao sera encerrada. Voce podera reativa-la fazendo login novamente no futuro.',
@@ -222,16 +243,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
               backgroundColor: const Color(0xFFFF1493),
               foregroundColor: Colors.white,
             ),
-            onPressed: () {
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(ctx);
               Navigator.pop(ctx);
-              _authService.deactivateAccount();
-              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Conta desativada com sucesso.'),
-                  backgroundColor: Color(0xFFFF1493),
-                ),
-              );
+
+              final success = await _authService.deactivateAccount();
+
+              if (!mounted) return;
+
+              if (success) {
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Conta desativada. Faca login para reativa-la.',
+                    ),
+                    backgroundColor: Color(0xFFFF1493),
+                  ),
+                );
+              } else {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      _authService.errorMessage ??
+                          'Falha ao desativar a conta.',
+                    ),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              }
             },
             child: const Text('Desativar'),
           ),
@@ -251,10 +290,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         title: const Text(
           'Apagar Conta Definitivamente',
-          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.redAccent,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: const Text(
-          'ATENCAO: Esta acao e irreversivel. Todos os seus dados, cartas e decks serao permanentemente excluidos do sistema.',
+          'ATENCAO: Esta acao e irreversivel. Seu cadastro sera permanentemente excluido do sistema.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -267,16 +309,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
             ),
-            onPressed: () {
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(ctx);
               Navigator.pop(ctx);
-              _authService.deleteAccount();
-              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Conta excluida definitivamente.'),
-                  backgroundColor: Colors.redAccent,
-                ),
-              );
+
+              final success = await _authService.deleteAccount();
+
+              if (!mounted) return;
+
+              if (success) {
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Conta excluida definitivamente.'),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              } else {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      _authService.errorMessage ?? 'Falha ao excluir a conta.',
+                    ),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              }
             },
             child: const Text('Excluir Definitivamente'),
           ),
@@ -285,7 +342,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  InputDecoration _buildFieldDecoration(String label, IconData icon, {String? helperText}) {
+  InputDecoration _buildFieldDecoration(
+    String label,
+    IconData icon, {
+    String? helperText,
+  }) {
     return InputDecoration(
       labelText: label,
       helperText: helperText,
@@ -337,12 +398,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
                       color: const Color(0xFF141414),
-                      border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.5),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
                       children: [
-                        _buildInfoRow('ID da Conta', user?.accountId ?? 'MYC-000000'),
+                        _buildInfoRow(
+                          'ID da Conta',
+                          user?.accountId ?? 'MYC-000000',
+                        ),
                         const Divider(color: Colors.white24, height: 20),
                         _buildInfoRow('Nome de Usuario', user?.username ?? '-'),
                         const Divider(color: Colors.white24, height: 20),
@@ -359,19 +425,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.all(20.0),
                     decoration: BoxDecoration(
                       color: const Color(0xFF141414),
-                      border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.5),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
                       children: [
-                        Row(
+                        ResponsiveFormRow(
                           children: [
                             Expanded(
                               child: TextFormField(
                                 controller: _firstNameController,
                                 style: const TextStyle(color: Colors.white),
-                                validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o nome' : null,
-                                decoration: _buildFieldDecoration('Nome', Icons.badge),
+                                validator: (v) =>
+                                    (v == null || v.trim().isEmpty)
+                                    ? 'Informe o nome'
+                                    : null,
+                                decoration: _buildFieldDecoration(
+                                  'Nome',
+                                  Icons.badge,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -379,8 +453,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               child: TextFormField(
                                 controller: _lastNameController,
                                 style: const TextStyle(color: Colors.white),
-                                validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o sobrenome' : null,
-                                decoration: _buildFieldDecoration('Sobrenome', Icons.badge_outlined),
+                                validator: (v) =>
+                                    (v == null || v.trim().isEmpty)
+                                    ? 'Informe o sobrenome'
+                                    : null,
+                                decoration: _buildFieldDecoration(
+                                  'Sobrenome',
+                                  Icons.badge_outlined,
+                                ),
                               ),
                             ),
                           ],
@@ -389,11 +469,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         TextFormField(
                           controller: _emailController,
                           style: const TextStyle(color: Colors.white),
-                          validator: (v) => (v == null || !v.contains('@')) ? 'E-mail invalido' : null,
-                          decoration: _buildFieldDecoration('E-mail', Icons.email),
+                          validator: (v) => (v == null || !v.contains('@'))
+                              ? 'E-mail invalido'
+                              : null,
+                          decoration: _buildFieldDecoration(
+                            'E-mail',
+                            Icons.email,
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        Row(
+                        ResponsiveFormRow(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
@@ -404,31 +489,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: const TextStyle(color: Colors.white),
                                 onTap: () => _selectBirthDate(context),
                                 validator: (v) {
-                                  if (v == null || v.trim().isEmpty) return 'Informe a data';
-                                  if (_calculatedAge < 6) return 'Idade minima 6 anos';
+                                  if (v == null || v.trim().isEmpty) {
+                                    return 'Informe a data';
+                                  }
+                                  if (_calculatedAge < 6) {
+                                    return 'Idade minima 6 anos';
+                                  }
                                   return null;
                                 },
                                 decoration: InputDecoration(
                                   labelText: 'Data de Nascimento',
                                   helperText: 'Idade: $_calculatedAge anos',
-                                  helperStyle: const TextStyle(color: Color(0xFFFFD700), fontSize: 11),
-                                  labelStyle: const TextStyle(color: Color(0xFFFF1493)),
-                                  prefixIcon: const Icon(Icons.cake, color: Color(0xFFFFD700)),
+                                  helperStyle: const TextStyle(
+                                    color: Color(0xFFFFD700),
+                                    fontSize: 11,
+                                  ),
+                                  labelStyle: const TextStyle(
+                                    color: Color(0xFFFF1493),
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.cake,
+                                    color: Color(0xFFFFD700),
+                                  ),
                                   suffixIcon: IconButton(
-                                    icon: const Icon(Icons.calendar_today, color: Color(0xFFFFD700)),
+                                    icon: const Icon(
+                                      Icons.calendar_today,
+                                      color: Color(0xFFFFD700),
+                                    ),
                                     onPressed: () => _selectBirthDate(context),
                                   ),
                                   enabledBorder: const OutlineInputBorder(
-                                    borderSide: BorderSide(color: Color(0xFFFFD700)),
+                                    borderSide: BorderSide(
+                                      color: Color(0xFFFFD700),
+                                    ),
                                   ),
                                   focusedBorder: const OutlineInputBorder(
-                                    borderSide: BorderSide(color: Color(0xFFFF1493), width: 2),
+                                    borderSide: BorderSide(
+                                      color: Color(0xFFFF1493),
+                                      width: 2,
+                                    ),
                                   ),
                                   errorBorder: const OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.redAccent),
+                                    borderSide: BorderSide(
+                                      color: Colors.redAccent,
+                                    ),
                                   ),
                                   focusedErrorBorder: const OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                                    borderSide: BorderSide(
+                                      color: Colors.redAccent,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -438,19 +548,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               flex: 4,
                               child: DropdownButtonFormField<String>(
                                 initialValue: _selectedGender,
+                                isExpanded: true,
                                 dropdownColor: const Color(0xFF141414),
                                 borderRadius: BorderRadius.circular(12),
                                 elevation: 16,
-                                icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFFFD700)),
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Color(0xFFFFD700),
+                                ),
                                 style: const TextStyle(color: Colors.white),
-                                decoration: _buildFieldDecoration('Sexo', Icons.person_outline),
+                                decoration: _buildFieldDecoration(
+                                  'Sexo',
+                                  Icons.person_outline,
+                                ),
                                 selectedItemBuilder: (context) {
                                   return _genderOptions.map((g) {
                                     return Align(
                                       alignment: Alignment.centerLeft,
                                       child: Text(
                                         g,
-                                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
                                       ),
                                     );
                                   }).toList();
@@ -460,10 +580,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   return DropdownMenuItem(
                                     value: g,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                        horizontal: 2,
+                                      ),
                                       decoration: const BoxDecoration(
                                         border: Border(
-                                          bottom: BorderSide(color: Color(0x22FFD700), width: 1),
+                                          bottom: BorderSide(
+                                            color: Color(0x22FFD700),
+                                            width: 1,
+                                          ),
                                         ),
                                       ),
                                       child: Row(
@@ -471,28 +597,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           Icon(
                                             _getGenderIcon(g),
                                             size: 18,
-                                            color: isSelected ? const Color(0xFFFF1493) : const Color(0xFFFFD700),
+                                            color: isSelected
+                                                ? const Color(0xFFFF1493)
+                                                : const Color(0xFFFFD700),
                                           ),
                                           const SizedBox(width: 10),
                                           Expanded(
                                             child: Text(
                                               g,
                                               style: TextStyle(
-                                                color: isSelected ? const Color(0xFFFFD700) : Colors.white,
-                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                                color: isSelected
+                                                    ? const Color(0xFFFFD700)
+                                                    : Colors.white,
+                                                fontWeight: isSelected
+                                                    ? FontWeight.bold
+                                                    : FontWeight.w500,
                                                 fontSize: 14,
                                               ),
                                             ),
                                           ),
                                           if (isSelected)
-                                            const Icon(Icons.check, size: 16, color: Color(0xFFFF1493)),
+                                            const Icon(
+                                              Icons.check,
+                                              size: 16,
+                                              color: Color(0xFFFF1493),
+                                            ),
                                         ],
                                       ),
                                     ),
                                   );
                                 }).toList(),
                                 onChanged: (v) {
-                                  if (v != null) setState(() => _selectedGender = v);
+                                  if (v != null) {
+                                    setState(() => _selectedGender = v);
+                                  }
                                 },
                               ),
                             ),
@@ -501,19 +639,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
                           initialValue: _selectedGameOrigin,
+                          isExpanded: true,
                           dropdownColor: const Color(0xFF141414),
                           borderRadius: BorderRadius.circular(12),
                           elevation: 16,
-                          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFFFD700)),
+                          icon: const Icon(
+                            Icons.arrow_drop_down,
+                            color: Color(0xFFFFD700),
+                          ),
                           style: const TextStyle(color: Colors.white),
-                          decoration: _buildFieldDecoration('Origem no Jogo', Icons.sports_esports),
+                          decoration: _buildFieldDecoration(
+                            'Origem no Jogo',
+                            Icons.sports_esports,
+                          ),
                           selectedItemBuilder: (context) {
                             return _gameOriginOptions.map((orig) {
                               return Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   orig,
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               );
                             }).toList();
@@ -523,10 +671,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             return DropdownMenuItem(
                               value: orig,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                  horizontal: 2,
+                                ),
                                 decoration: const BoxDecoration(
                                   border: Border(
-                                    bottom: BorderSide(color: Color(0x22FFD700), width: 1),
+                                    bottom: BorderSide(
+                                      color: Color(0x22FFD700),
+                                      width: 1,
+                                    ),
                                   ),
                                 ),
                                 child: Row(
@@ -534,28 +688,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     Icon(
                                       _getGameOriginIcon(orig),
                                       size: 18,
-                                      color: isSelected ? const Color(0xFFFF1493) : const Color(0xFFFFD700),
+                                      color: isSelected
+                                          ? const Color(0xFFFF1493)
+                                          : const Color(0xFFFFD700),
                                     ),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         orig,
                                         style: TextStyle(
-                                          color: isSelected ? const Color(0xFFFFD700) : Colors.white,
-                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                          color: isSelected
+                                              ? const Color(0xFFFFD700)
+                                              : Colors.white,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.w500,
                                           fontSize: 14,
                                         ),
                                       ),
                                     ),
                                     if (isSelected)
-                                      const Icon(Icons.check, size: 16, color: Color(0xFFFF1493)),
+                                      const Icon(
+                                        Icons.check,
+                                        size: 16,
+                                        color: Color(0xFFFF1493),
+                                      ),
                                   ],
                                 ),
                               ),
                             );
                           }).toList(),
                           onChanged: (v) {
-                            if (v != null) setState(() => _selectedGameOrigin = v);
+                            if (v != null) {
+                              setState(() => _selectedGameOrigin = v);
+                            }
                           },
                         ),
                       ],
@@ -564,13 +730,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 28),
 
                   // Secao 3: Preferencias e Forma de Tratamento
-                  _buildSectionHeader('Forma de Tratamento', Icons.record_voice_over),
+                  _buildSectionHeader(
+                    'Forma de Tratamento',
+                    Icons.record_voice_over,
+                  ),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(20.0),
                     decoration: BoxDecoration(
                       color: const Color(0xFF141414),
-                      border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.5),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
@@ -583,19 +754,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
                           initialValue: _selectedPronoun,
+                          isExpanded: true,
                           dropdownColor: const Color(0xFF141414),
                           borderRadius: BorderRadius.circular(12),
                           elevation: 16,
-                          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFFFD700)),
+                          icon: const Icon(
+                            Icons.arrow_drop_down,
+                            color: Color(0xFFFFD700),
+                          ),
                           style: const TextStyle(color: Colors.white),
-                          decoration: _buildFieldDecoration('Tratamento', Icons.label),
+                          decoration: _buildFieldDecoration(
+                            'Tratamento',
+                            Icons.label,
+                          ),
                           selectedItemBuilder: (context) {
                             return _pronounOptions.map((p) {
                               return Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   p,
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               );
                             }).toList();
@@ -605,10 +786,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             return DropdownMenuItem(
                               value: p,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                  horizontal: 2,
+                                ),
                                 decoration: const BoxDecoration(
                                   border: Border(
-                                    bottom: BorderSide(color: Color(0x22FFD700), width: 1),
+                                    bottom: BorderSide(
+                                      color: Color(0x22FFD700),
+                                      width: 1,
+                                    ),
                                   ),
                                 ),
                                 child: Row(
@@ -616,21 +803,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     Icon(
                                       _getPronounIcon(p),
                                       size: 18,
-                                      color: isSelected ? const Color(0xFFFF1493) : const Color(0xFFFFD700),
+                                      color: isSelected
+                                          ? const Color(0xFFFF1493)
+                                          : const Color(0xFFFFD700),
                                     ),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         p,
                                         style: TextStyle(
-                                          color: isSelected ? const Color(0xFFFFD700) : Colors.white,
-                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                          color: isSelected
+                                              ? const Color(0xFFFFD700)
+                                              : Colors.white,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.w500,
                                           fontSize: 14,
                                         ),
                                       ),
                                     ),
                                     if (isSelected)
-                                      const Icon(Icons.check, size: 16, color: Color(0xFFFF1493)),
+                                      const Icon(
+                                        Icons.check,
+                                        size: 16,
+                                        color: Color(0xFFFF1493),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -656,7 +853,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      onPressed: _saveProfile,
+                      onPressed: _isSaving ? null : _saveProfile,
                       child: const Text(
                         'SALVAR ALTERACOES',
                         style: TextStyle(
@@ -670,13 +867,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 36),
 
                   // Secao 4: Zona de Acoes Criticas (Conta)
-                  _buildSectionHeader('Zona de Seguranca da Conta', Icons.security),
+                  _buildSectionHeader(
+                    'Zona de Seguranca da Conta',
+                    Icons.security,
+                  ),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(20.0),
                     decoration: BoxDecoration(
                       color: const Color(0xFF141414),
-                      border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: Colors.redAccent.withValues(alpha: 0.5),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
@@ -717,13 +919,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         Icon(icon, color: const Color(0xFFFFD700), size: 18),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            color: Color(0xFFFFD700),
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFFFFD700),
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
           ),
         ),
       ],
@@ -734,13 +938,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.grey, fontSize: 13),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
           ),
         ),
       ],

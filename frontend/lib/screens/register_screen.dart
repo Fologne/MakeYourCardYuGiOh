@@ -1,4 +1,7 @@
+import '../widgets/responsive_form_row.dart';
+
 import 'package:flutter/material.dart';
+
 import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -109,7 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       },
     );
 
-    if (picked != null) {
+    if (picked != null && mounted) {
       setState(() {
         _selectedBirthDate = picked;
         final day = picked.day.toString().padLeft(2, '0');
@@ -126,7 +129,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final now = DateTime.now();
     int age = now.year - _selectedBirthDate!.year;
     if (now.month < _selectedBirthDate!.month ||
-        (now.month == _selectedBirthDate!.month && now.day < _selectedBirthDate!.day)) {
+        (now.month == _selectedBirthDate!.month &&
+            now.day < _selectedBirthDate!.day)) {
       age--;
     }
     return age >= 0 ? age : 0;
@@ -170,7 +174,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
-      final errorMsg = _authService.errorMessage ?? 'Erro ao criar conta. Tente novamente.';
+      final errorMsg =
+          _authService.errorMessage ?? 'Erro ao criar conta. Tente novamente.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMsg),
@@ -181,7 +186,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  InputDecoration _buildInputDecoration(String label, IconData icon, {String? helperText}) {
+  InputDecoration _buildInputDecoration(
+    String label,
+    IconData icon, {
+    String? helperText,
+  }) {
     return InputDecoration(
       labelText: label,
       helperText: helperText,
@@ -257,14 +266,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 24),
 
                     // Nome e Sobrenome lado a lado
-                    Row(
+                    ResponsiveFormRow(
                       children: [
                         Expanded(
                           child: TextFormField(
                             controller: _firstNameController,
                             style: const TextStyle(color: Colors.white),
-                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o nome' : null,
-                            decoration: _buildInputDecoration('Nome', Icons.badge),
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Informe o nome'
+                                : null,
+                            decoration: _buildInputDecoration(
+                              'Nome',
+                              Icons.badge,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -272,8 +286,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: TextFormField(
                             controller: _lastNameController,
                             style: const TextStyle(color: Colors.white),
-                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o sobrenome' : null,
-                            decoration: _buildInputDecoration('Sobrenome', Icons.badge_outlined),
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Informe o sobrenome'
+                                : null,
+                            decoration: _buildInputDecoration(
+                              'Sobrenome',
+                              Icons.badge_outlined,
+                            ),
                           ),
                         ),
                       ],
@@ -285,11 +304,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _usernameController,
                       style: const TextStyle(color: Colors.white),
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Informe o nome de usuario';
-                        if (v.trim().length < 3) return 'Minimo de 3 caracteres';
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Informe o nome de usuario';
+                        }
+                        if (v.trim().length < 3) {
+                          return 'Minimo de 3 caracteres';
+                        }
                         return null;
                       },
-                      decoration: _buildInputDecoration('Nome de Usuario (Apelido)', Icons.alternate_email),
+                      decoration: _buildInputDecoration(
+                        'Nome de Usuario (Apelido)',
+                        Icons.alternate_email,
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -299,8 +325,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       keyboardType: TextInputType.emailAddress,
                       style: const TextStyle(color: Colors.white),
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Informe o e-mail';
-                        if (!v.contains('@') || !v.contains('.')) return 'Informe um e-mail valido';
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Informe o e-mail';
+                        }
+                        if (!v.contains('@') || !v.contains('.')) {
+                          return 'Informe um e-mail valido';
+                        }
                         return null;
                       },
                       decoration: _buildInputDecoration('E-mail', Icons.email),
@@ -308,7 +338,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 16),
 
                     // Data de Nascimento e Sexo lado a lado
-                    Row(
+                    ResponsiveFormRow(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
@@ -319,7 +349,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             style: const TextStyle(color: Colors.white),
                             onTap: () => _selectBirthDate(context),
                             validator: (v) {
-                              if (_selectedBirthDate == null || v == null || v.trim().isEmpty) {
+                              if (_selectedBirthDate == null ||
+                                  v == null ||
+                                  v.trim().isEmpty) {
                                 return 'Informe a data';
                               }
                               final age = _calculatedAge;
@@ -330,25 +362,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             },
                             decoration: InputDecoration(
                               labelText: 'Data de Nascimento',
-                              helperText: _calculatedAge != null ? 'Idade: $_calculatedAge anos' : null,
-                              helperStyle: const TextStyle(color: Color(0xFFFFD700), fontSize: 11),
-                              labelStyle: const TextStyle(color: Color(0xFFFF1493)),
-                              prefixIcon: const Icon(Icons.cake, color: Color(0xFFFFD700)),
+                              helperText: _calculatedAge != null
+                                  ? 'Idade: $_calculatedAge anos'
+                                  : null,
+                              helperStyle: const TextStyle(
+                                color: Color(0xFFFFD700),
+                                fontSize: 11,
+                              ),
+                              labelStyle: const TextStyle(
+                                color: Color(0xFFFF1493),
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.cake,
+                                color: Color(0xFFFFD700),
+                              ),
                               suffixIcon: IconButton(
-                                icon: const Icon(Icons.calendar_today, color: Color(0xFFFFD700)),
+                                icon: const Icon(
+                                  Icons.calendar_today,
+                                  color: Color(0xFFFFD700),
+                                ),
                                 onPressed: () => _selectBirthDate(context),
                               ),
                               enabledBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFFFFD700)),
+                                borderSide: BorderSide(
+                                  color: Color(0xFFFFD700),
+                                ),
                               ),
                               focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFFFF1493), width: 2),
+                                borderSide: BorderSide(
+                                  color: Color(0xFFFF1493),
+                                  width: 2,
+                                ),
                               ),
                               errorBorder: const OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.redAccent),
                               ),
                               focusedErrorBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                                borderSide: BorderSide(
+                                  color: Colors.redAccent,
+                                  width: 2,
+                                ),
                               ),
                             ),
                           ),
@@ -358,19 +411,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           flex: 4,
                           child: DropdownButtonFormField<String>(
                             initialValue: _selectedGender,
+                            isExpanded: true,
                             dropdownColor: const Color(0xFF141414),
                             borderRadius: BorderRadius.circular(12),
                             elevation: 16,
-                            icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFFFD700)),
+                            icon: const Icon(
+                              Icons.arrow_drop_down,
+                              color: Color(0xFFFFD700),
+                            ),
                             style: const TextStyle(color: Colors.white),
-                            decoration: _buildInputDecoration('Sexo', Icons.person_outline),
+                            decoration: _buildInputDecoration(
+                              'Sexo',
+                              Icons.person_outline,
+                            ),
                             selectedItemBuilder: (context) {
                               return _genderOptions.map((gender) {
                                 return Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
                                     gender,
-                                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 );
                               }).toList();
@@ -380,10 +443,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return DropdownMenuItem(
                                 value: gender,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6,
+                                    horizontal: 2,
+                                  ),
                                   decoration: const BoxDecoration(
                                     border: Border(
-                                      bottom: BorderSide(color: Color(0x22FFD700), width: 1),
+                                      bottom: BorderSide(
+                                        color: Color(0x22FFD700),
+                                        width: 1,
+                                      ),
                                     ),
                                   ),
                                   child: Row(
@@ -391,28 +460,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       Icon(
                                         _getGenderIcon(gender),
                                         size: 18,
-                                        color: isSelected ? const Color(0xFFFF1493) : const Color(0xFFFFD700),
+                                        color: isSelected
+                                            ? const Color(0xFFFF1493)
+                                            : const Color(0xFFFFD700),
                                       ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
                                           gender,
                                           style: TextStyle(
-                                            color: isSelected ? const Color(0xFFFFD700) : Colors.white,
-                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                            color: isSelected
+                                                ? const Color(0xFFFFD700)
+                                                : Colors.white,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w500,
                                             fontSize: 14,
                                           ),
                                         ),
                                       ),
                                       if (isSelected)
-                                        const Icon(Icons.check, size: 16, color: Color(0xFFFF1493)),
+                                        const Icon(
+                                          Icons.check,
+                                          size: 16,
+                                          color: Color(0xFFFF1493),
+                                        ),
                                     ],
                                   ),
                                 ),
                               );
                             }).toList(),
                             onChanged: (val) {
-                              if (val != null) setState(() => _selectedGender = val);
+                              if (val != null) {
+                                setState(() => _selectedGender = val);
+                              }
                             },
                           ),
                         ),
@@ -423,19 +504,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Origem no Jogo
                     DropdownButtonFormField<String>(
                       initialValue: _selectedGameOrigin,
+                      isExpanded: true,
                       dropdownColor: const Color(0xFF141414),
                       borderRadius: BorderRadius.circular(12),
                       elevation: 16,
-                      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFFFD700)),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Color(0xFFFFD700),
+                      ),
                       style: const TextStyle(color: Colors.white),
-                      decoration: _buildInputDecoration('Origem no Jogo', Icons.sports_esports),
+                      decoration: _buildInputDecoration(
+                        'Origem no Jogo',
+                        Icons.sports_esports,
+                      ),
                       selectedItemBuilder: (context) {
                         return _gameOriginOptions.map((origin) {
                           return Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
                               origin,
-                              style: const TextStyle(color: Colors.white, fontSize: 14),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
                             ),
                           );
                         }).toList();
@@ -445,10 +536,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return DropdownMenuItem(
                           value: origin,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 2,
+                            ),
                             decoration: const BoxDecoration(
                               border: Border(
-                                bottom: BorderSide(color: Color(0x22FFD700), width: 1),
+                                bottom: BorderSide(
+                                  color: Color(0x22FFD700),
+                                  width: 1,
+                                ),
                               ),
                             ),
                             child: Row(
@@ -456,28 +553,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 Icon(
                                   _getGameOriginIcon(origin),
                                   size: 18,
-                                  color: isSelected ? const Color(0xFFFF1493) : const Color(0xFFFFD700),
+                                  color: isSelected
+                                      ? const Color(0xFFFF1493)
+                                      : const Color(0xFFFFD700),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     origin,
                                     style: TextStyle(
-                                      color: isSelected ? const Color(0xFFFFD700) : Colors.white,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                      color: isSelected
+                                          ? const Color(0xFFFFD700)
+                                          : Colors.white,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
                                       fontSize: 14,
                                     ),
                                   ),
                                 ),
                                 if (isSelected)
-                                  const Icon(Icons.check, size: 16, color: Color(0xFFFF1493)),
+                                  const Icon(
+                                    Icons.check,
+                                    size: 16,
+                                    color: Color(0xFFFF1493),
+                                  ),
                               ],
                             ),
                           ),
                         );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setState(() => _selectedGameOrigin = val);
+                        if (val != null) {
+                          setState(() => _selectedGameOrigin = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),
@@ -495,25 +604,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       decoration: InputDecoration(
                         labelText: 'Senha',
                         labelStyle: const TextStyle(color: Color(0xFFFF1493)),
-                        prefixIcon: const Icon(Icons.lock, color: Color(0xFFFFD700)),
+                        prefixIcon: const Icon(
+                          Icons.lock,
+                          color: Color(0xFFFFD700),
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: const Color(0xFFFFD700),
                           ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                         ),
                         enabledBorder: const OutlineInputBorder(
                           borderSide: BorderSide(color: Color(0xFFFFD700)),
                         ),
                         focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFFF1493), width: 2),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFF1493),
+                            width: 2,
+                          ),
                         ),
                         errorBorder: const OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.redAccent),
                         ),
                         focusedErrorBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                          borderSide: BorderSide(
+                            color: Colors.redAccent,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -526,31 +648,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: const TextStyle(color: Colors.white),
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Confirme sua senha';
-                        if (v != _passwordController.text) return 'As senhas nao coincidem';
+                        if (v != _passwordController.text) {
+                          return 'As senhas nao coincidem';
+                        }
                         return null;
                       },
                       decoration: InputDecoration(
                         labelText: 'Confirmar Senha',
                         labelStyle: const TextStyle(color: Color(0xFFFF1493)),
-                        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFFFD700)),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Color(0xFFFFD700),
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                            _obscureConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: const Color(0xFFFFD700),
                           ),
-                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                          onPressed: () => setState(
+                            () => _obscureConfirmPassword =
+                                !_obscureConfirmPassword,
+                          ),
                         ),
                         enabledBorder: const OutlineInputBorder(
                           borderSide: BorderSide(color: Color(0xFFFFD700)),
                         ),
                         focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFFF1493), width: 2),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFF1493),
+                            width: 2,
+                          ),
                         ),
                         errorBorder: const OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.redAccent),
                         ),
                         focusedErrorBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.redAccent, width: 2),
+                          borderSide: BorderSide(
+                            color: Colors.redAccent,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -574,7 +712,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 height: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : const Text(

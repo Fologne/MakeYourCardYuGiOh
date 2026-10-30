@@ -2,19 +2,22 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { generateUniqueAccountId } from '../utils/idGenerator.js';
+import { getJwtExpiresIn, getJwtSecret } from '../config/jwt.js';
+
+import { GENDER_OPTIONS, GAME_ORIGIN_OPTIONS, validateBirthDate } from '../utils/validation.js';
 
 // Gera token JWT assinado para o usuario
 function generateToken(user) {
-  const secret = process.env.JWT_SECRET || 'myc_secret_key_yu_gi_oh_default';
   return jwt.sign(
     {
       id: user._id,
       accountId: user.accountId,
       username: user.username,
       email: user.email,
+      sessionVersion: user.sessionVersion ?? 0,
     },
-    secret,
-    { expiresIn: '7d' }
+    getJwtSecret(),
+    { expiresIn: getJwtExpiresIn() }
   );
 }
 
@@ -47,8 +50,44 @@ export async function register(req, res) {
       });
     }
 
+    const birthDateValidation = validateBirthDate(birthDate);
+    if (!birthDateValidation.valid) {
+      return res.status(400).json({
+        success: false,
+        message: birthDateValidation.message,
+      });
+    }
+
+    if (gender && !GENDER_OPTIONS.includes(gender)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Opcao de sexo invalida.',
+      });
+    }
+
+    if (gameOrigin && !GAME_ORIGIN_OPTIONS.includes(gameOrigin)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Origem no jogo invalida.',
+      });
+    }
+
     const cleanUsername = username.trim().toLowerCase();
     const cleanEmail = email.trim().toLowerCase();
+
+    if (cleanUsername.length < 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'O nome de usuario deve ter no minimo 3 caracteres.',
+      });
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Formato de e-mail invalido.',
+      });
+    }
 
     // Verifica se ja existe usuario com mesmo e-mail ou username
     const existingUser = await User.findOne({
@@ -78,7 +117,7 @@ export async function register(req, res) {
       lastName: lastName.trim(),
       username: cleanUsername,
       email: cleanEmail,
-      birthDate: new Date(birthDate),
+      birthDate: birthDateValidation.date,
       gender: gender || 'Prefiro nao informar',
       gameOrigin: gameOrigin || 'TCG',
       password: hashedPassword,
@@ -98,10 +137,23 @@ export async function register(req, res) {
       user: newUser.toSafeObject(),
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: 'E-mail ou nome de usuario ja esta em uso.',
+      });
+    }
+
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Dados invalidos para criacao da conta.',
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: 'Erro interno ao criar conta.',
-      error: error.message,
     });
   }
 }
@@ -123,19 +175,12 @@ export async function login(req, res) {
     // Busca usuario por e-mail ou username
     const user = await User.findOne({
       $or: [{ email: cleanIdentifier }, { username: cleanIdentifier }],
-    });
+    }).select('+sessionVersion');
 
     if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Credenciais invalidas.',
-      });
-    }
-
-    if (!user.isActive) {
-      return res.status(403).json({
-        success: false,
-        message: 'Esta conta foi desativada.',
       });
     }
 
@@ -148,11 +193,22 @@ export async function login(req, res) {
       });
     }
 
+    // Conta desativada e reativada automaticamente apos login valido
+    let reactivated = false;
+    if (!user.isActive) {
+      user.isActive = true;
+      await user.save();
+      reactivated = true;
+    }
+
     const token = generateToken(user);
 
     return res.status(200).json({
       success: true,
-      message: 'Login realizado com sucesso.',
+      message: reactivated
+        ? 'Conta reativada e login realizado com sucesso.'
+        : 'Login realizado com sucesso.',
+      reactivated,
       token,
       user: user.toSafeObject(),
     });
@@ -160,7 +216,6 @@ export async function login(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Erro interno ao realizar login.',
-      error: error.message,
     });
   }
 }
@@ -176,7 +231,6 @@ export async function getProfile(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Erro ao buscar perfil.',
-      error: error.message,
     });
   }
 }
@@ -188,17 +242,73 @@ export async function updateProfile(req, res) {
     const {
       firstName,
       lastName,
+      email,
       birthDate,
       gender,
       gameOrigin,
       preferredPronoun,
     } = req.body;
 
+    if (email) {
+      const cleanEmail = email.trim().toLowerCase();
+
+      if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Formato de e-mail invalido.',
+        });
+      }
+
+      if (cleanEmail !== user.email) {
+        const emailInUse = await User.findOne({
+          email: cleanEmail,
+          _id: { $ne: user._id },
+        });
+
+        if (emailInUse) {
+          return res.status(409).json({
+            success: false,
+            message: 'Este e-mail ja esta em uso.',
+          });
+        }
+
+        user.email = cleanEmail;
+      }
+    }
+
+    if (birthDate) {
+      const birthDateValidation = validateBirthDate(birthDate);
+      if (!birthDateValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: birthDateValidation.message,
+        });
+      }
+      user.birthDate = birthDateValidation.date;
+    }
+
+    if (gender) {
+      if (!GENDER_OPTIONS.includes(gender)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Opcao de sexo invalida.',
+        });
+      }
+      user.gender = gender;
+    }
+
+    if (gameOrigin) {
+      if (!GAME_ORIGIN_OPTIONS.includes(gameOrigin)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Origem no jogo invalida.',
+        });
+      }
+      user.gameOrigin = gameOrigin;
+    }
+
     if (firstName) user.firstName = firstName.trim();
     if (lastName) user.lastName = lastName.trim();
-    if (birthDate) user.birthDate = new Date(birthDate);
-    if (gender) user.gender = gender;
-    if (gameOrigin) user.gameOrigin = gameOrigin;
     if (preferredPronoun) user.preferredPronoun = preferredPronoun;
 
     await user.save();
@@ -209,10 +319,19 @@ export async function updateProfile(req, res) {
       user: user.toSafeObject(),
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, message: 'Este e-mail ja esta em uso.' });
+    }
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Dados invalidos para atualizacao do perfil.',
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: 'Erro ao atualizar perfil.',
-      error: error.message,
     });
   }
 }
@@ -221,18 +340,16 @@ export async function updateProfile(req, res) {
 export async function deactivateAccount(req, res) {
   try {
     const user = req.user;
-    user.isActive = false;
-    await user.save();
+    await User.updateOne({ _id: user._id }, { $set: { isActive: false }, $inc: { sessionVersion: 1 } });
 
     return res.status(200).json({
       success: true,
-      message: 'Conta desativada com sucesso.',
+      message: 'Conta desativada. Faca login novamente para reativa-la.',
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: 'Erro ao desativar conta.',
-      error: error.message,
     });
   }
 }
@@ -250,7 +367,6 @@ export async function deleteAccount(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Erro ao excluir conta.',
-      error: error.message,
     });
   }
 }

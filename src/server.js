@@ -1,13 +1,18 @@
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import app from './app.js';
 import { connectDatabase } from './config/db.js';
+import { validateEnvironment } from './config/env.js';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
 
 async function startServer() {
   try {
+    // Valida as variaveis obrigatorias antes de conectar ao banco
+    validateEnvironment();
+
     // Conecta ao MongoDB antes de iniciar o servidor HTTP
     await connectDatabase();
 
@@ -19,7 +24,10 @@ async function startServer() {
     // Tratamento de encerramento seguro
     const gracefulShutdown = () => {
       console.log('Encerrando servidor de forma segura...');
-      server.close(() => {
+      const deadline = setTimeout(() => process.exit(1), 10000);
+      deadline.unref();
+      server.close(async () => {
+        await mongoose.disconnect();
         console.log('Servidor HTTP encerrado.');
         process.exit(0);
       });

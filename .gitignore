@@ -5,9 +5,13 @@
 !src/
 !src/**
 !.env.example
+!.dockerignore
 !compose.yml
 !Dockerfile
 !package.json
+!package-lock.json
+!test/
+!test/**
 !frontend/
 !frontend/**
 !.github/

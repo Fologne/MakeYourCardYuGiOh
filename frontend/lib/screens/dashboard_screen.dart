@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/auth_service.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -15,7 +16,10 @@ class DashboardScreen extends StatelessWidget {
         ),
         title: const Text(
           'Confirmar Saida',
-          style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Color(0xFFFFD700),
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: const Text(
           'Deseja realmente encerrar sua sessao?',
@@ -31,10 +35,9 @@ class DashboardScreen extends StatelessWidget {
               backgroundColor: const Color(0xFFFF1493),
               foregroundColor: Colors.white,
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              AuthService().logout();
-              Navigator.pushReplacementNamed(context, '/login');
+              await AuthService().logout();
             },
             child: const Text('Sair'),
           ),
@@ -54,7 +57,12 @@ class DashboardScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: AuthService(),
+    builder: (context, child) => _buildDashboard(context),
+  );
+
+  Widget _buildDashboard(BuildContext context) {
     final authService = AuthService();
     final user = authService.currentUser;
 
@@ -121,7 +129,10 @@ class DashboardScreen extends StatelessWidget {
                     height: 56,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFFFD700), width: 2),
+                      border: Border.all(
+                        color: const Color(0xFFFFD700),
+                        width: 2,
+                      ),
                       color: const Color(0xFF222222),
                     ),
                     child: const Icon(
@@ -157,8 +168,14 @@ class DashboardScreen extends StatelessWidget {
                           spacing: 8,
                           runSpacing: 4,
                           children: [
-                            _buildBadge('Origem: $origin', const Color(0xFFFF1493)),
-                            _buildBadge('Plano: $plan', const Color(0xFFFFD700)),
+                            _buildBadge(
+                              'Origem: $origin',
+                              const Color(0xFFFF1493),
+                            ),
+                            _buildBadge(
+                              'Plano: $plan',
+                              const Color(0xFFFFD700),
+                            ),
                           ],
                         ),
                       ],
@@ -184,14 +201,22 @@ class DashboardScreen extends StatelessWidget {
             // Grade de navegacao adaptativa
             LayoutBuilder(
               builder: (context, constraints) {
-                final crossAxisCount = constraints.maxWidth > 700 ? 4 : 2;
+                final crossAxisCount = constraints.maxWidth < 360
+                    ? 1
+                    : constraints.maxWidth > 1000
+                    ? 4
+                    : constraints.maxWidth > 700
+                    ? 3
+                    : 2;
                 return GridView.count(
                   crossAxisCount: crossAxisCount,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisSpacing: 16.0,
                   mainAxisSpacing: 16.0,
-                  childAspectRatio: 1.05,
+                  mainAxisExtent:
+                      205 *
+                      MediaQuery.textScalerOf(context).scale(1).clamp(1, 2),
                   children: [
                     _buildNavCard(
                       context,
@@ -310,10 +335,7 @@ class DashboardScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 11,
-                ),
+                style: const TextStyle(color: Colors.grey, fontSize: 11),
               ),
             ],
           ),
